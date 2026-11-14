@@ -1,0 +1,8 @@
+__pycache__/
+node_modules/
+AGENTS-STATE.md
+
+# Development material kept only locally
+.claude/
+docs/review/
+docs/playground.html

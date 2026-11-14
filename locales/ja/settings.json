@@ -1,0 +1,20 @@
+{
+  "SmartGuides_Snap_Enabled": {
+    "name": "ドラッグとリサイズで吸い付く"
+  },
+  "SmartGuides_Snap_Wires": {
+    "name": "ワイヤが水平になる位置に吸い付く"
+  },
+  "SmartGuides_Snap_Edges": {
+    "name": "ほかのノードやグループの端に吸い付く"
+  },
+  "SmartGuides_Snap_Distance": {
+    "name": "吸い付く距離（画面の px）"
+  },
+  "SmartGuides_Color_FollowTheme": {
+    "name": "テーマの強調の色を使う"
+  },
+  "SmartGuides_Color_Custom": {
+    "name": "色（テーマの色を使わないとき）"
+  }
+}

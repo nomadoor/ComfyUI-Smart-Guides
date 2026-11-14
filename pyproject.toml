@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-smart-guides"
+description = "Smart guides for the ComfyUI canvas: nodes snap to straight wires and to other nodes' edges, and selections can be aligned and evenly spaced."
+version = "0.1.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/nomadoor/ComfyUI-Smart-Guides"
+"Bug Tracker" = "https://github.com/nomadoor/ComfyUI-Smart-Guides/issues"
+
+[tool.comfy]
+PublisherId = "nomadoor"
+DisplayName = "Smart Guides"
+Icon = ""
+includes = []
