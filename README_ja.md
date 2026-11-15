@@ -11,7 +11,7 @@ ComfyUI Manager で「Smart Guides」を検索してインストールしてく�
 
 ## スマートガイド
 
-<!-- 動画: スマートガイド -->
+https://github.com/user-attachments/assets/a5a9083c-f81f-4f38-9ab7-d7f8246ff848
 
 ノードやグループをドラッグ・リサイズすると、次の位置に吸い付きます。
 
@@ -23,7 +23,7 @@ ComfyUI Manager で「Smart Guides」を検索してインストールしてく�
 
 ## 整列と等間隔
 
-<!-- 動画: 整列と等間隔 -->
+https://github.com/user-attachments/assets/2e4ee913-2235-46dc-9384-d48deccdb8ff
 
 ノードを 2 つ以上選び、選択ツールボックスの整列ボタンを押すとメニューが開きます。
 
@@ -38,7 +38,7 @@ ComfyUI Manager で「Smart Guides」を検索してインストールしてく�
 
 ## グループのリサイズ
 
-<!-- 動画: グループのリサイズ -->
+https://github.com/user-attachments/assets/e2b46283-742c-4c03-b99a-cfa1206984fe
 
 グループを四隅のどこからでもリサイズできます。
 
