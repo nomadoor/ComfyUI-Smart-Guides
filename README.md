@@ -11,7 +11,7 @@ Search for "Smart Guides" in ComfyUI Manager and install it.
 
 ## Smart guides
 
-<!-- Video: Smart guides -->
+https://github.com/user-attachments/assets/a5a9083c-f81f-4f38-9ab7-d7f8246ff848
 
 When you drag or resize a node or group, it snaps to:
 
@@ -23,7 +23,7 @@ Guide lines appear on aligned edges. Hold Shift while moving to turn snapping of
 
 ## Align and distribute
 
-<!-- Video: Align and distribute -->
+https://github.com/user-attachments/assets/2e4ee913-2235-46dc-9384-d48deccdb8ff
 
 Select two or more nodes and press the align button in the selection toolbox to open the menu.
 
@@ -38,7 +38,7 @@ After distributing, a handle appears in each gap. Drag one to change all the gap
 
 ## Group resizing
 
-<!-- Video: Group resizing -->
+https://github.com/user-attachments/assets/e2b46283-742c-4c03-b99a-cfa1206984fe
 
 Resize a group from any of its four corners.
 
