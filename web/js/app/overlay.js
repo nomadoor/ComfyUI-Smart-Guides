@@ -1,13 +1,13 @@
 // A canvas laid over the graph canvas, above the Nodes 2.0 node layer, so nothing drawn on it
 // hides under nodes; and the draw jobs for it: snap guides with the slot dots of flat wires, and
-// the group corner grip (the distribute handles add their own job, see ./handles.mjs).
+// the group corner grip (the distribute handles add their own job, see ./handles.js).
 // The flat wires themselves are recolored on the graph canvas, under the nodes.
 // Everything is computed from live geometry at draw time.
 
-import { alignedGuides } from "../core/guides.mjs";
-import { gripSegments } from "../core/corners.mjs";
-import { isFlat } from "../core/snap.mjs";
-import { accent, cachedCssVar } from "./accent.mjs";
+import { alignedGuides } from "../core/guides.js";
+import { gripSegments } from "../core/corners.js";
+import { isFlat } from "../core/snap.js";
+import { accent, cachedCssVar } from "./accent.js";
 
 // the edges of a resized box that move, by corner
 const EDGES = { NW: ["left", "top"], NE: ["right", "top"], SW: ["left", "bottom"], SE: ["right", "bottom"] };
@@ -88,13 +88,13 @@ export function snapGuides(env, getSessions) {
         : env.rectOf(s.item);
       const corner = s.corner;
       const edges = s.mode === "drag" ? undefined : EDGES[corner];
-      if (opts.edges) {
+      if (opts.edges && !s.wireOnly) {
         const guides = alignedGuides(rect, s.targets, { edges });
         // On each box, a solid line along its aligned edge; between boxes, a dashed line.
         // The line never runs dashed through a node, so a top guide at the body top reads as
         // "these edges line up" rather than a line crossing the nodes.
         // Tops align by the body, but are drawn at the top of the boxes (headers are all the same
-        // height); a box without a header gets its edge at its own top (see core/guides.mjs).
+        // height); a box without a header gets its edge at its own top (see core/guides.js).
         const seg = (g, at, from, to) => {
           ctx.beginPath();
           if (g.orient === "v") { ctx.moveTo(at, from); ctx.lineTo(at, to); }
@@ -141,7 +141,7 @@ export function flatWires(env, s) {
   if (!opts.enabled || !opts.wires) return [];
   const out = [];
   for (const n of s.moving ?? []) {
-    if (!env.isNode(n)) continue;
+    if (!env.isNode(n) && !env.isIoNode(n)) continue;
     for (const w of env.wiresOf(n)) {
       if (!s.moving.has(w.other) && isFlat(w.mine[1], w.theirs[1])) out.push(w);
     }

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deltaModel, absoluteModel, canvasResizeModel, clientResizeModel, inAutoPanBand, AUTO_PAN_EDGE_PX } from "../web/js/core/pointer_model.mjs";
+import { deltaModel, absoluteModel, canvasResizeModel, clientResizeModel, inAutoPanBand, AUTO_PAN_EDGE_PX } from "../web/js/core/pointer_model.js";
 
 // solve: snap y to 100 when within 5 canvas units, x unchanged
 const solve = ([x, y]) => [x, Math.abs(y - 100) <= 5 ? 100 : y];

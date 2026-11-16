@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pickClone } from "../web/js/core/clone.mjs";
+import { pickClone } from "../web/js/core/clone.js";
 
 test("the clone is the node that did not exist at the press, even when other nodes stay selected", () => {
   const before = new Set(["1", "2", "3"]);

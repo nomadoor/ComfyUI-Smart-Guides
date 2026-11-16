@@ -3,12 +3,12 @@
 // LGraphCanvas.prototype._processPrimaryButton is looked up on every press, so wrapping it
 // works after the canvas exists. After the frontend has handled the press, when it landed on a
 // group corner handle (which reaches a little outside the group, like a Nodes 2.0 node's
-// handles; see ../core/corners.mjs), the drag callbacks of app.canvas.pointer are replaced.
+// handles; see ../core/corners.js), the drag callbacks of app.canvas.pointer are replaced.
 // Clicks, selection, renaming and the context menu stay with the frontend.
 
-import { solveResize } from "../core/snap.mjs";
-import { cornerAt } from "../core/corners.mjs";
-import { resizedBy, withEdgesOnGrid, withMinSize } from "../core/resize.mjs";
+import { solveResize } from "../core/snap.js";
+import { cornerAt } from "../core/corners.js";
+import { resizedBy, withEdgesOnGrid, withMinSize } from "../core/resize.js";
 
 const CURSOR = { NW: "nwse-resize", SE: "nwse-resize", NE: "nesw-resize", SW: "nesw-resize" };
 

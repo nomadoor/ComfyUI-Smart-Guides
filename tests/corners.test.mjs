@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cornerAt, gripSegments } from "../web/js/core/corners.mjs";
+import { cornerAt, gripSegments } from "../web/js/core/corners.js";
 
 const r = { x: 100, y: 100, w: 400, h: 300 };
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { placePopover } from "../web/js/core/popover.mjs";
+import { placePopover } from "../web/js/core/popover.js";
 
 const box = (left, top, width, height) => ({ left, top, width, height, bottom: top + height });
 const menu = box(0, 0, 200, 80);

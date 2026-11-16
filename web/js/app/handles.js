@@ -1,10 +1,10 @@
 // The distribute handles (docs/spec.md 3.6): after a distribute, one handle per gap. Dragging any
 // of them changes every gap by the same amount, from positive into negative (see handleDrag in
-// ../core/distribute.mjs). While they are shown, lanes of two or more nodes are outlined, each
+// ../core/distribute.js). While they are shown, lanes of two or more nodes are outlined, each
 // gap shows its size, and the lanes found at the press are kept (not re-detected).
 
-import { sessionGaps, sessionLanes, sessionValid, sessionState, sessionPress, handleSpots, handleDrag, boundsOf } from "../core/distribute.mjs";
-import { accent, cachedCssVar } from "./accent.mjs";
+import { sessionGaps, sessionLanes, sessionValid, sessionState, sessionPress, handleSpots, handleDrag, boundsOf } from "../core/distribute.js";
+import { accent, cachedCssVar } from "./accent.js";
 
 export const HANDLE_CLASS = "smart-guides-handle";
 

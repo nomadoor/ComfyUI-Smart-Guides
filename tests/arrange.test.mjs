@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runAction, buttonState, isDistribute } from "../web/js/core/arrange.mjs";
+import { runAction, buttonState, isDistribute } from "../web/js/core/arrange.js";
 
 const box = (id, x, y, w, h, extra = {}) => ({ id, x, y, w, h, ...extra });
 const byId = (changes) => Object.fromEntries(changes.map((c) => [c.id, c]));

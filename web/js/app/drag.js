@@ -2,13 +2,13 @@
 //
 // The frontend keeps moving the item itself. This module only rewrites the pointer
 // coordinates (capture phase) so the frontend computes the snapped position. How each
-// renderer turns pointer events into positions is in ../core/pointer_model.mjs.
+// renderer turns pointer events into positions is in ../core/pointer_model.js.
 // See docs/spec.md, section 1.
 
-import { solveDrag, solveResize, wireTop } from "../core/snap.mjs";
-import { deltaModel, absoluteModel, canvasResizeModel, clientResizeModel, inAutoPanBand } from "../core/pointer_model.mjs";
-import { movingEdges, withMovingEdges, withEdgesOf } from "../core/resize.mjs";
-import { pickClone } from "../core/clone.mjs";
+import { solveDrag, solveResize, wireTop } from "../core/snap.js";
+import { deltaModel, absoluteModel, canvasResizeModel, clientResizeModel, inAutoPanBand } from "../core/pointer_model.js";
+import { movingEdges, withMovingEdges, withEdgesOf } from "../core/resize.js";
+import { pickClone } from "../core/clone.js";
 
 const DRAG_THRESHOLD_PX = 6; // the frontend's own threshold before a press becomes a drag
 
@@ -36,7 +36,7 @@ export function createDragSnapper(env) {
   const notify = () => { for (const fn of listeners) fn(session); };
 
   // An exception ends the current drag (the frontend carries on with the real pointer); a few of
-  // them switch snapping off for the page (see ./status.mjs).
+  // them switch snapping off for the page (see ./status.js).
   const guard = (fn) => (e) => {
     if (status.isOff("snap")) return;
     try { fn(e); } catch (err) {
@@ -97,7 +97,10 @@ export function createDragSnapper(env) {
   // In Nodes 2.0 the nodes are elements above the canvas, so a press on the canvas is never on a node.
   const canvasNodeAt = (canvas, graph, x, y) => (env.vueMode() ? null : graph.getNodeOnPos(x, y, canvas.visible_nodes));
 
-  // A press on the canvas: a node (classic renderer), or a group's title (both renderers).
+  // A press on the canvas: a node (classic renderer), a subgraph's input or output node (both
+  // renderers draw it on the canvas), or a group's title (both renderers). The order is the
+  // frontend's (resolvePointerTarget): node, subgraph input/output node, then group (it also
+  // checks link badges, reroutes and links in between; those presses never start a drag of these).
   function canvasPress(e, at, canvas, graph) {
     const [x, y] = canvas.convertEventToCanvasOffset(e);
     const node = canvasNodeAt(canvas, graph, x, y);
@@ -105,6 +108,12 @@ export function createDragSnapper(env) {
       if (node.pinned) return null;
       const corner = node.flags?.collapsed ? null : node.findResizeDirection?.(x, y) ?? null;
       return { ...at, renderer: "classic", item: node, corner, pressCanvas: [x, y], ...restState(node) };
+    }
+    // a press on its slot drags a link instead; the frontend then never starts dragging the item
+    const io = graph.getIoNodeOnPos?.(x, y);
+    if (io && env.isIoNode(io)) {
+      if (io.pinned) return null;
+      return { ...at, renderer: "classic", item: io, corner: null, wireOnly: true, pressCanvas: [x, y], ...restState(io) };
     }
     const group = graph.getGroupOnPos?.(x, y);
     if (group && !group.pinned && group.isPointInTitlebar(x, y)) {
@@ -116,11 +125,17 @@ export function createDragSnapper(env) {
   function canvasClonePress(e, at, canvas, graph) {
     const [x, y] = canvas.convertEventToCanvasOffset(e);
     const original = canvasNodeAt(canvas, graph, x, y);
-    if (!original) return null;
+    if (!original) {
+      // the frontend does not clone a subgraph input/output node: Alt drags it as usual
+      const io = graph.getIoNodeOnPos?.(x, y);
+      if (!io || !env.isIoNode(io) || io.pinned) return null;
+      const { beforeIds, ...plain } = at;
+      return { ...plain, renderer: "classic", item: io, corner: null, wireOnly: true, pressCanvas: [x, y], ...restState(io) };
+    }
     return { ...at, renderer: "classic", item: null, corner: null, alt: true, pressCanvas: [x, y] };
   }
 
-  // The clone made by an Alt press: the node added since the press (see core/clone.mjs).
+  // The clone made by an Alt press: the node added since the press (see core/clone.js).
   function findClone() {
     const canvas = env.canvas();
     const selectedIds = new Set([...(canvas?.selectedItems ?? [])].filter(env.isNode).map((n) => String(n.id)));
@@ -192,7 +207,7 @@ export function createDragSnapper(env) {
     const wireTops = [];
     if (mode === "drag") {
       for (const n of moving) {
-        if (!env.isNode(n)) continue;
+        if (!env.isNode(n) && !env.isIoNode(n)) continue;
         for (const w of env.wiresOf(n)) {
           if (moving.has(w.other)) continue;
           wireTops.push({ key: w.key, top: wireTop(w.mine[1], w.theirs[1], item.pos[1], offset[1]) });
@@ -201,6 +216,8 @@ export function createDragSnapper(env) {
     }
     const s = {
       mode, corner: press.corner, item, moving, targets, wireTops, offset, renderer: press.renderer,
+      // a subgraph input/output node snaps only to make its wires horizontal (spec 1.1)
+      wireOnly: !!press.wireOnly,
       model: makeModel(mode, item),
       // the visual box at rest: its size and header for drags, the whole box for resizes
       size: [r0.w, r0.h], head: r0.head ?? 0, startRect: r0, titleH: r0.h - press.startShown[1],
@@ -229,7 +246,7 @@ export function createDragSnapper(env) {
   function solvePos(raw, scale, opts) {
     const s = session;
     const rect = { x: raw[0] + s.offset[0], y: raw[1] + s.offset[1], w: s.size[0], h: s.size[1], head: s.head };
-    const r = solveDrag({ rect, targets: s.targets, wireTops: s.wireTops, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, edges: opts.edges, wires: opts.wires });
+    const r = solveDrag({ rect, targets: s.targets, wireTops: s.wireTops, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, edges: opts.edges && !s.wireOnly, wires: opts.wires });
     keepSnap(s, r);
     return [r.x - s.offset[0], r.y - s.offset[1]];
   }

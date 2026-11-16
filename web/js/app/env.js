@@ -1,7 +1,7 @@
 // Reads and writes the frontend: geometry, links, selection, settings.
 // Everything that knows about LiteGraph objects lives here, so the core modules stay pure.
 
-import { exitDistance } from "../core/snap.mjs";
+import { exitDistance } from "../core/snap.js";
 
 export const SETTINGS = {
   enabled: "SmartGuides.Snap.Enabled",
@@ -12,7 +12,7 @@ export const SETTINGS = {
   color: "SmartGuides.Color.Custom",
 };
 
-/** status: see ./status.mjs; env reports whether Nodes 2.0 boxes come from the DOM. */
+/** status: see ./status.js; env reports whether Nodes 2.0 boxes come from the DOM. */
 export function createEnv(app, status) {
   const setting = (id, fallback) => {
     try {
@@ -86,7 +86,8 @@ export function createEnv(app, status) {
       }
     }
     const b = item.boundingRect;
-    const head = isNode(item)
+    // a subgraph input/output node has no header
+    const head = isIoNode(item) ? 0 : isNode(item)
       ? Math.max(0, item.pos[1] - b[1])
       : Math.min(b[3], Number(item.titleHeight) || globalThis.LiteGraph?.NODE_TITLE_HEIGHT || 0);
     return { x: b[0], y: b[1], w: b[2], h: b[3], head };
@@ -149,15 +150,17 @@ export function createEnv(app, status) {
   }
 
   /**
-   * Wire segments that start at a slot of this node, as { key, node, other, side, mine, theirs }.
+   * Wire segments that start at a slot of this node, or of a subgraph input/output node (the
+   * brackets inside a subgraph, see isIoNode), as { key, node, other, side, mine, theirs }.
    * mine is the slot, theirs the other end of the segment: the other node's slot, or, when the
-   * wire goes through reroutes, the reroute next to this node. other is that node or reroute.
+   * wire goes through reroutes, the reroute next to this node, or, inside a subgraph, a slot of the
+   * subgraph's input or output node. other is that node, reroute, or subgraph input/output node.
    * segment is the frontend object that owns the segment's center marker position (_pos): the
    * link for the segment that ends at an input, the reroute for the one that ends at a reroute.
    */
   function wiresOf(node) {
     const g = graph();
-    if (!g || !isNode(node)) return [];
+    if (!g || !(isNode(node) || isIoNode(node))) return [];
     const rerouteOf = (id) => (id == null ? null : g.getReroute?.(id) ?? g.reroutes?.get?.(id) ?? null);
     // walk the chain from the input side toward the output; the last one found is next to the output
     const firstReroute = (link) => {
@@ -171,8 +174,41 @@ export function createEnv(app, status) {
       }
       return r;
     };
+    // inside a subgraph, a wire can end at the subgraph's input or output node (the brackets at
+    // the edges), which is not in the graph's nodes: the link names it by id (-10 / -20) and the
+    // frontend draws the wire from that node's slot pos
+    const ioSlot = (ioNode, id, slot) => {
+      if (ioNode?.id == null || id !== ioNode.id) return null;
+      const p = ioNode.slots?.[slot]?.pos;
+      return p && Number.isFinite(p[0]) && Number.isFinite(p[1]) ? [p[0], p[1]] : null;
+    };
     const out = [];
-    (node.inputs ?? []).forEach((input, i) => {
+    if (isIoNode(node)) {
+      // the input bracket is where its wires start (an output end), the output bracket where they end
+      const fromInput = node === g.inputNode;
+      // its slots' pos is laid out by arrange(), which the frontend runs only when it draws; in
+      // Nodes 2.0 a bracket selected with a dragged node moves before that, so lay it out now
+      try { node.arrange?.(); } catch { /* keep the last layout */ }
+      for (const slot of node.slots ?? []) {
+        const p = slot?.pos;
+        if (!p || !Number.isFinite(p[0]) || !Number.isFinite(p[1])) continue;
+        const mine = [p[0], p[1]];
+        for (const id of slot.linkIds ?? []) {
+          const link = g.getLink(id);
+          if (!link) continue;
+          if (link.parentId != null) {
+            const r = fromInput ? firstReroute(link) : rerouteOf(link.parentId); // the reroute next to the bracket
+            if (r?.pos) out.push({ key: `wire:${link.id}:r`, node, other: r, side: fromInput ? "out" : "in", mine, theirs: [r.pos[0], r.pos[1]], segment: fromInput ? r : link });
+            continue;
+          }
+          const other = g.getNodeById(fromInput ? link.target_id : link.origin_id);
+          if (!other) continue;
+          const theirs = fromInput ? other.getInputPos(link.target_slot) : other.getOutputPos(link.origin_slot);
+          out.push({ key: `wire:${link.id}`, node, other, side: fromInput ? "out" : "in", mine, theirs, segment: link });
+        }
+      }
+    }
+    (isNode(node) ? node.inputs ?? [] : []).forEach((input, i) => {
       if (input?.link == null) return;
       const link = g.getLink(input.link);
       if (!link) return;
@@ -181,11 +217,16 @@ export function createEnv(app, status) {
         if (r?.pos) out.push({ key: `wire:${link.id}:r`, node, other: r, side: "in", mine: node.getInputPos(i), theirs: [r.pos[0], r.pos[1]], segment: link });
         return;
       }
+      const io = ioSlot(g.inputNode, link.origin_id, link.origin_slot);
+      if (io) {
+        out.push({ key: `wire:${link.id}`, node, other: g.inputNode, side: "in", mine: node.getInputPos(i), theirs: io, segment: link });
+        return;
+      }
       const other = g.getNodeById(link.origin_id);
       if (!other || other === node) return;
       out.push({ key: `wire:${link.id}`, node, other, side: "in", mine: node.getInputPos(i), theirs: other.getOutputPos(link.origin_slot), segment: link });
     });
-    (node.outputs ?? []).forEach((output, j) => {
+    (isNode(node) ? node.outputs ?? [] : []).forEach((output, j) => {
       for (const id of output?.links ?? []) {
         const link = g.getLink(id);
         if (!link) continue;
@@ -194,12 +235,18 @@ export function createEnv(app, status) {
           if (r?.pos) out.push({ key: `wire:${link.id}:r`, node, other: r, side: "out", mine: node.getOutputPos(j), theirs: [r.pos[0], r.pos[1]], segment: r });
           continue;
         }
+        const io = ioSlot(g.outputNode, link.target_id, link.target_slot);
+        if (io) {
+          out.push({ key: `wire:${link.id}`, node, other: g.outputNode, side: "out", mine: node.getOutputPos(j), theirs: io, segment: link });
+          continue;
+        }
         const other = g.getNodeById(link.target_id);
         if (!other || other === node) continue;
         out.push({ key: `wire:${link.id}`, node, other, side: "out", mine: node.getOutputPos(j), theirs: other.getInputPos(link.target_slot), segment: link });
       }
     });
     // several links of one output can share the first reroute: keep one segment per reroute
+    // (a subgraph input/output node is not a node either, so its wires are kept by shape too)
     const seenKeys = new Set();
     return out.filter((w) => {
       const k = w.other && !isNode(w.other) ? `r:${w.side}:${w.mine[0]},${w.mine[1]}:${w.theirs[0]},${w.theirs[1]}` : w.key;
@@ -207,6 +254,15 @@ export function createEnv(app, status) {
       seenKeys.add(k);
       return true;
     });
+  }
+
+  /**
+   * Whether the item is the open subgraph's input or output node: the brackets at its edges.
+   * They are drawn on the canvas in both renderers and are not in the graph's nodes.
+   */
+  function isIoNode(item) {
+    const g = graph();
+    return !!item && (item === g?.inputNode || item === g?.outputNode);
   }
 
   /** The selected nodes (groups and reroutes on wires left out). */
@@ -223,7 +279,7 @@ export function createEnv(app, status) {
     else node.size = size;
   }
 
-  /** A node as a box for the menu (see ../core/arrange.mjs), measured through `elements` like rectOf. */
+  /** A node as a box for the menu (see ../core/arrange.js), measured through `elements` like rectOf. */
   function boxOf(node, elements) {
     const r = rectOf(node, elements);
     return {
@@ -262,7 +318,7 @@ export function createEnv(app, status) {
   }
 
   return {
-    status, canvas, graph, setting, isNode, vueMode, rectOf, visibleTargets, movingSet, wiresOf,
+    status, canvas, graph, setting, isNode, isIoNode, vueMode, rectOf, visibleTargets, movingSet, wiresOf,
     selectedNodes, boxOf, nodeElements, renderedSize, setSize, applyChanges, gridSize,
     alwaysSnap: () => !!setting("pysssss.SnapToGrid", false),
     /** This extension's snap settings; inPx / outPx are the enter and exit distances. */
