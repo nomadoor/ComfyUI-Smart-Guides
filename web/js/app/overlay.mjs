@@ -88,7 +88,7 @@ export function snapGuides(env, getSessions) {
         : env.rectOf(s.item);
       const corner = s.corner;
       const edges = s.mode === "drag" ? undefined : EDGES[corner];
-      if (opts.edges) {
+      if (opts.edges && !s.wireOnly) {
         const guides = alignedGuides(rect, s.targets, { edges });
         // On each box, a solid line along its aligned edge; between boxes, a dashed line.
         // The line never runs dashed through a node, so a top guide at the body top reads as
@@ -141,7 +141,7 @@ export function flatWires(env, s) {
   if (!opts.enabled || !opts.wires) return [];
   const out = [];
   for (const n of s.moving ?? []) {
-    if (!env.isNode(n)) continue;
+    if (!env.isNode(n) && !env.isIoNode(n)) continue;
     for (const w of env.wiresOf(n)) {
       if (!s.moving.has(w.other) && isFlat(w.mine[1], w.theirs[1])) out.push(w);
     }
