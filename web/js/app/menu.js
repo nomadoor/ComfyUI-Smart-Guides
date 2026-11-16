@@ -1,13 +1,13 @@
 // The align / distribute / match-size menu: a popover opened from one button on the selection
-// toolbox, or from the Run bar when the toolbox is turned off (see ./buttons.mjs). Pressing a
-// distribute button also shows the distribute handles (./handles.mjs).
+// toolbox, or from the Run bar when the toolbox is turned off (see ./buttons.js). Pressing a
+// distribute button also shows the distribute handles (./handles.js).
 
-import { runAction, buttonState, isDistribute, distributeAxis } from "../core/arrange.mjs";
-import { startSession } from "../core/distribute.mjs";
-import { placePopover } from "../core/popover.mjs";
-import { strings } from "./i18n.mjs";
-import { createButtons } from "./buttons.mjs";
-import { createDistributeHandles, HANDLE_CLASS } from "./handles.mjs";
+import { runAction, buttonState, isDistribute, distributeAxis } from "../core/arrange.js";
+import { startSession } from "../core/distribute.js";
+import { placePopover } from "../core/popover.js";
+import { strings } from "./i18n.js";
+import { createButtons } from "./buttons.js";
+import { createDistributeHandles, HANDLE_CLASS } from "./handles.js";
 
 // Icons, 16x16.
 const ICONS = {

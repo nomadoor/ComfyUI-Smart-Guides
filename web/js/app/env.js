@@ -1,7 +1,7 @@
 // Reads and writes the frontend: geometry, links, selection, settings.
 // Everything that knows about LiteGraph objects lives here, so the core modules stay pure.
 
-import { exitDistance } from "../core/snap.mjs";
+import { exitDistance } from "../core/snap.js";
 
 export const SETTINGS = {
   enabled: "SmartGuides.Snap.Enabled",
@@ -12,7 +12,7 @@ export const SETTINGS = {
   color: "SmartGuides.Color.Custom",
 };
 
-/** status: see ./status.mjs; env reports whether Nodes 2.0 boxes come from the DOM. */
+/** status: see ./status.js; env reports whether Nodes 2.0 boxes come from the DOM. */
 export function createEnv(app, status) {
   const setting = (id, fallback) => {
     try {
@@ -279,7 +279,7 @@ export function createEnv(app, status) {
     else node.size = size;
   }
 
-  /** A node as a box for the menu (see ../core/arrange.mjs), measured through `elements` like rectOf. */
+  /** A node as a box for the menu (see ../core/arrange.js), measured through `elements` like rectOf. */
   function boxOf(node, elements) {
     const r = rectOf(node, elements);
     return {

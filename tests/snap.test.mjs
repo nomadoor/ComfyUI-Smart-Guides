@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { solveDrag, solveResize, exitDistance, wireTop, isFlat } from "../web/js/core/snap.mjs";
+import { solveDrag, solveResize, exitDistance, wireTop, isFlat } from "../web/js/core/snap.js";
 
 const base = { scale: 1, inPx: 8, outPx: 14, edges: true, wires: true, current: {} };
 

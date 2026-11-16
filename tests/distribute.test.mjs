@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lanes, distribute, distributeState, startSession, sessionGaps, sessionState, sessionPress, handleSpots, handleDrag, crossSpots } from "../web/js/core/distribute.mjs";
+import { lanes, distribute, distributeState, startSession, sessionGaps, sessionState, sessionPress, handleSpots, handleDrag, crossSpots } from "../web/js/core/distribute.js";
 
 const box = (id, x, y, w, h, extra = {}) => ({ id, x, y, w, h, ...extra });
 const apply = (boxes, changes) => {

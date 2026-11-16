@@ -2,13 +2,13 @@
 //
 // The frontend keeps moving the item itself. This module only rewrites the pointer
 // coordinates (capture phase) so the frontend computes the snapped position. How each
-// renderer turns pointer events into positions is in ../core/pointer_model.mjs.
+// renderer turns pointer events into positions is in ../core/pointer_model.js.
 // See docs/spec.md, section 1.
 
-import { solveDrag, solveResize, wireTop } from "../core/snap.mjs";
-import { deltaModel, absoluteModel, canvasResizeModel, clientResizeModel, inAutoPanBand } from "../core/pointer_model.mjs";
-import { movingEdges, withMovingEdges, withEdgesOf } from "../core/resize.mjs";
-import { pickClone } from "../core/clone.mjs";
+import { solveDrag, solveResize, wireTop } from "../core/snap.js";
+import { deltaModel, absoluteModel, canvasResizeModel, clientResizeModel, inAutoPanBand } from "../core/pointer_model.js";
+import { movingEdges, withMovingEdges, withEdgesOf } from "../core/resize.js";
+import { pickClone } from "../core/clone.js";
 
 const DRAG_THRESHOLD_PX = 6; // the frontend's own threshold before a press becomes a drag
 
@@ -36,7 +36,7 @@ export function createDragSnapper(env) {
   const notify = () => { for (const fn of listeners) fn(session); };
 
   // An exception ends the current drag (the frontend carries on with the real pointer); a few of
-  // them switch snapping off for the page (see ./status.mjs).
+  // them switch snapping off for the page (see ./status.js).
   const guard = (fn) => (e) => {
     if (status.isOff("snap")) return;
     try { fn(e); } catch (err) {
@@ -135,7 +135,7 @@ export function createDragSnapper(env) {
     return { ...at, renderer: "classic", item: null, corner: null, alt: true, pressCanvas: [x, y] };
   }
 
-  // The clone made by an Alt press: the node added since the press (see core/clone.mjs).
+  // The clone made by an Alt press: the node added since the press (see core/clone.js).
   function findClone() {
     const canvas = env.canvas();
     const selectedIds = new Set([...(canvas?.selectedItems ?? [])].filter(env.isNode).map((n) => String(n.id)));

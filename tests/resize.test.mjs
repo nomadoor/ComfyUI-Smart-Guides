@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { movingEdges, withMovingEdges, resizedBy, withEdgesOf, withEdgesOnGrid, withMinSize } from "../web/js/core/resize.mjs";
+import { movingEdges, withMovingEdges, resizedBy, withEdgesOf, withEdgesOnGrid, withMinSize } from "../web/js/core/resize.js";
 
 const r = { x: 100, y: 200, w: 300, h: 150 };
 
