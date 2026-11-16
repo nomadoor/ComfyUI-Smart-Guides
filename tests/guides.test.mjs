@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { alignedGuides } from "../web/js/core/guides.mjs";
+import { alignedGuides } from "../web/js/core/guides.js";
 
 test("one guide per line, spanning every aligned box", () => {
   const me = { x: 0, y: 100, w: 100, h: 50 };

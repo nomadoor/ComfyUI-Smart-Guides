@@ -1,11 +1,11 @@
 // Align / match-size / distribute for the menu, and the state of each button.
-// Distribute (columns / rows spaced evenly) lives in ./distribute.mjs.
+// Distribute (columns / rows spaced evenly) lives in ./distribute.js.
 // Pure: boxes are { id, x, y, w, h, head?, pinned?, fixedSize? } in canvas units (visual box;
 // head is the header height). Top alignment and match height use the body (header excluded).
 // Results are lists of changes: { id, x, y } for moves, { id, w } or { id, h } for sizes.
 // Results are not rounded.
 
-import { distribute, distributeState } from "./distribute.mjs";
+import { distribute, distributeState } from "./distribute.js";
 
 const TOL = 0.5;
 const DISTRIBUTE_AXIS = { distX: "x", distY: "y" };

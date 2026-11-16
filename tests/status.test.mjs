@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createStatus } from "../web/js/app/status.mjs";
+import { createStatus } from "../web/js/app/status.js";
 
 const quiet = () => {
   const lines = [];

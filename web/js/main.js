@@ -1,12 +1,12 @@
 import { app } from "../../../scripts/app.js";
-import { createEnv, SETTINGS } from "./app/env.mjs";
-import { createDragSnapper } from "./app/drag.mjs";
-import { createGroupResizer } from "./app/groups.mjs";
-import { createOverlay, snapGuides, installWireHighlight, wireFallback, groupGrip } from "./app/overlay.mjs";
-import { createStatus, FEATURES } from "./app/status.mjs";
-import { setAccentSource, accent, DEFAULT_ACCENT } from "./app/accent.mjs";
-import { createMenu } from "./app/menu.mjs";
-import { COMMAND_ID, TOOLBOX_ICON, ACTIONBAR_ICON } from "./app/buttons.mjs";
+import { createEnv, SETTINGS } from "./app/env.js";
+import { createDragSnapper } from "./app/drag.js";
+import { createGroupResizer } from "./app/groups.js";
+import { createOverlay, snapGuides, installWireHighlight, wireFallback, groupGrip } from "./app/overlay.js";
+import { createStatus, FEATURES } from "./app/status.js";
+import { setAccentSource, accent, DEFAULT_ACCENT } from "./app/accent.js";
+import { createMenu } from "./app/menu.js";
+import { COMMAND_ID, TOOLBOX_ICON, ACTIONBAR_ICON } from "./app/buttons.js";
 
 const stylesheet = document.createElement("link");
 stylesheet.rel = "stylesheet";

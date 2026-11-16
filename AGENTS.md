@@ -15,18 +15,21 @@
 - Read `docs/review/2026-11-13-feasibility.md` and `docs/prior-art.md` before designing any part. Its open decisions (P1) are the owner's to make; do not settle them in code.
 - Target: the frontend that ComfyUI-dev runs (`comfyui-frontend-package` 1.58.5 as of 2026-11-13), in both renderers: classic LiteGraph canvas and Nodes 2.0 (`Comfy.VueNodes.Enabled`).
 - Python is only the entry point: `__init__.py` exposes `WEB_DIRECTORY`, with empty `NODE_CLASS_MAPPINGS`.
-- `web/js/main.js` is the only extension entry. Supporting modules use `.mjs` so ComfyUI does not load them as separate extensions.
+- Browser modules under `web/` are plain `.js`. ComfyUI serves `.js` with `Cache-Control: no-store`; any other extension (`.mjs` included) gets no cache header, so the browser keeps its own copy and goes on running the old file after an update, through a ComfyUI restart and a hard reload. Do not add `.mjs` files under `web/`.
+- ComfyUI imports every `.js` under `web/` once at startup (the `/extensions` list). `web/js/main.js` is the only file that calls `app.registerExtension`. Every other module only defines and exports: no code that runs on import, no import cycles. The startup import and `main.js`'s own imports load the same URL, so each module still runs once.
+- Import specifiers are plain relative paths with no query string; a query makes a second copy of the module.
+- Code that must load only on demand goes in a dot-directory such as `web/js/.lazy/`: ComfyUI serves it with `no-store` but does not list it.
 - No build step and no runtime dependencies.
 
 ## Architecture Rules
 
-- Keep the math pure: snapping candidates, hysteresis, column detection, align / distribute / match-size results, and "already done / not applicable" button states live in `.mjs` modules with no DOM and no ComfyUI imports, and take plain rectangles and slot offsets.
-- The pure core (`web/js/core/`) never branches on the renderer. How each renderer turns pointer events into positions is one model per renderer in `core/pointer_model.mjs`; detecting the press and the drag session per renderer lives in `app/drag.mjs`.
+- Keep the math pure: snapping candidates, hysteresis, column detection, align / distribute / match-size results, and "already done / not applicable" button states live in `web/js/core/` modules with no DOM and no ComfyUI imports, and take plain rectangles and slot offsets.
+- The pure core (`web/js/core/`) never branches on the renderer. How each renderer turns pointer events into positions is one model per renderer in `core/pointer_model.js`; detecting the press and the drag session per renderer lives in `app/drag.js`.
 - Read geometry through the frontend, not constants: `node.boundingRect` for the visual box in the classic renderer, the node's DOM box in Nodes 2.0 (it draws headerless nodes from `pos.y - title height`), `node.getInputPos()` / `getOutputPos()` for slots. Never hard-code the title height, and never call `measure()` without `ctx` (it breaks collapsed widths).
 - The canvas's event handlers (`processMouseDown/Move/Up`) are bound at canvas creation, so patching those on the prototype later has no effect. Methods the frontend looks up per call (`LGraphCanvas.prototype._processPrimaryButton`, `LGraph.prototype.getSnapToGridSize` / `snapToGrid`) can be wrapped at any time. The canvas stops propagation of its own `pointerdown`, so window listeners never see canvas presses in the bubble phase.
 - Snap drags and node resizes by rewriting `clientX/Y` of `pointermove` / `pointerup` in the capture phase, so the frontend moves the node itself (both renderers; see `docs/review/2026-11-14-probes.md`). Only group corner resize replaces the frontend's drag callbacks.
 - Every frontend internal the extension relies on is feature-detected; if one is missing, switch that feature off and keep the rest working.
-  - Each feature reports through `app/status.mjs` (`ok` / `fallback` / `off`). Exceptions in a feature's own work (snapping, group corners, wire color, cursor) go to `status.fail(feature)` and never switch off other features; cosmetic DOM and drawing work (button labels, overlay frames) may only log. Prototype wrappers always call the original, guard their own code, and pass through when their feature is off. A drag or resize that ends with an exception still closes its undo transaction.
+  - Each feature reports through `app/status.js` (`ok` / `fallback` / `off`). Exceptions in a feature's own work (snapping, group corners, wire color, cursor) go to `status.fail(feature)` and never switch off other features; cosmetic DOM and drawing work (button labels, overlay frames) may only log. Prototype wrappers always call the original, guard their own code, and pass through when their feature is off. A drag or resize that ends with an exception still closes its undo transaction.
   - A new or changed reliance on an internal goes into `docs/frontend-dependencies.md` in the same change.
 - What the user drops is where the node stays. Do not move nodes after release, and keep one drag or one menu action as one undo step in both renderers (`emitBeforeChange` / `emitAfterChange`).
 - Never write to the frontend's settings. Read `pysssss.SnapToGrid`, `Comfy.SnapToGrid.GridSize`, and `Comfy.Canvas.SelectionToolbox` through `app.extensionManager.setting`.
@@ -37,7 +40,7 @@
 
 ## Testing
 
-- `npm test` runs `tests/*.test.mjs` with Node's test runner. Use TDD for the pure modules.
+- `npm test` runs `tests/*.test.mjs` with Node's test runner. Use TDD for the pure modules. `tests/modules.test.mjs` checks the module rules above.
 - Check browser behavior in a ComfyUI started with only this extension loaded, in both renderers. Other alignment extensions (easykit-node-align is installed in ComfyUI-dev) fight this one; keep them out.
 - Record what was checked, in which renderer and frontend version, in `AGENTS-STATE.md`.
 
