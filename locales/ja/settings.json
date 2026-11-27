@@ -11,6 +11,9 @@
   "SmartGuides_Snap_Distance": {
     "name": "吸い付く距離（画面の px）"
   },
+  "SmartGuides_Snap_MaxScope": {
+    "name": "最大整列範囲（画面の px、0 は制限なし）"
+  },
   "SmartGuides_Color_FollowTheme": {
     "name": "テーマの強調の色を使う"
   },

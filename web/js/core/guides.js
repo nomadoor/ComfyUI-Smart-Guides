@@ -1,5 +1,5 @@
 // Guides: every line on which an edge of the moving box coincides (within 0.5) with an edge of
-// another box. One guide per line, long enough to reach every box on it.
+// another box. One guide per line, long enough to reach every box within the alignment scope.
 //
 // Tops line up by the top of the body (the header excluded). Headers all have the same height, so
 // when every box on the line has a header, the line is drawn at the top of the boxes. When a box
@@ -7,10 +7,18 @@
 
 const TOL = 0.5;
 
+/** Whether the gap between the boxes along the guide is within the scope in canvas units. */
+export function inAlignmentScope(a, b, axis, scope) {
+  if (scope === 0) return true;
+  const size = axis === "x" ? "w" : "h";
+  return Math.max(b[axis] - (a[axis] + a[size]), a[axis] - (b[axis] + b[size])) <= scope;
+}
+
 /**
  * @param {{x:number,y:number,w:number,h:number,head?:number}} me the moving box
  * @param {Array<{x:number,y:number,w:number,h:number,head?:number}>} targets other boxes
- * @param {{ edges?: string[] }} [opts] edges of mine to consider: left, right, top, bottom (default all)
+ * @param {{ edges?: string[], scope?: number }} [opts] edges of mine to consider (default all),
+ *   and the maximum gap along the guide in canvas units (0 = unlimited)
  * @returns {Array<{ orient: 'v'|'h', at: number, drawAt: number, from: number, to: number, spans: number[][] }>}
  *   'v' is a vertical line, 'h' horizontal. at is the aligned coordinate; drawAt is where the
  *   line between boxes is drawn. spans are [from, to, pos] per box along the line, sorted,
@@ -18,6 +26,7 @@ const TOL = 0.5;
  */
 export function alignedGuides(me, targets, opts = {}) {
   const edges = new Set(opts.edges ?? ["left", "right", "top", "bottom"]);
+  const scope = opts.scope ?? 0;
   const mine = { left: me.x, right: me.x + me.w, top: me.y, bottom: me.y + me.h };
   const lines = new Map();
   // byBody: the line aligns body tops
@@ -31,10 +40,13 @@ export function alignedGuides(me, targets, opts = {}) {
     g.boxes.push(box);
   };
   for (const t of targets) {
-    for (const e of ["left", "right"]) {
-      if (!edges.has(e)) continue;
-      if ([t.x, t.x + t.w].some((v) => Math.abs(v - mine[e]) <= TOL)) add("v", mine[e], t);
+    if (inAlignmentScope(me, t, "y", scope)) {
+      for (const e of ["left", "right"]) {
+        if (!edges.has(e)) continue;
+        if ([t.x, t.x + t.w].some((v) => Math.abs(v - mine[e]) <= TOL)) add("v", mine[e], t);
+      }
     }
+    if (!inAlignmentScope(me, t, "x", scope)) continue;
     const myBodyTop = me.y + (me.head ?? 0);
     const theirBodyTop = t.y + (t.head ?? 0);
     if (edges.has("top")) {

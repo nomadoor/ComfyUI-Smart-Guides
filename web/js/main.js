@@ -48,6 +48,7 @@ app.registerExtension({
     { id: SETTINGS.wires, category: ["Smart Guides", "Snap", "Wires"], name: "Snap to make wires horizontal", type: "boolean", defaultValue: true },
     { id: SETTINGS.edges, category: ["Smart Guides", "Snap", "Edges"], name: "Snap to other nodes' and groups' edges", type: "boolean", defaultValue: true },
     { id: SETTINGS.distance, category: ["Smart Guides", "Snap", "Distance"], name: "Snap distance (screen pixels)", type: "slider", attrs: { min: 2, max: 24, step: 1 }, defaultValue: 8 },
+    { id: SETTINGS.maxScope, category: ["Smart Guides", "Snap", "MaxScope"], name: "Max alignment scope (screen pixels, 0 = unlimited)", type: "number", attrs: { min: 0, step: 1 }, defaultValue: 0 },
     { id: SETTINGS.followTheme, category: ["Smart Guides", "Color", "FollowTheme"], name: "Use the theme's accent color", type: "boolean", defaultValue: true, onChange: () => accent() },
     { id: SETTINGS.color, category: ["Smart Guides", "Color", "Custom"], name: "Color (when not using the theme's accent color)", type: "color", defaultValue: DEFAULT_ACCENT, onChange: () => accent() },
   ],

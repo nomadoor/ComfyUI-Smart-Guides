@@ -16,6 +16,18 @@ test("one guide per line, spanning every aligned box", () => {
   assert.equal(tops[0].to, 680);
 });
 
+test("guides include only aligned spans within the scope of the moving box", () => {
+  const me = { x: 0, y: 0, w: 100, h: 50 };
+  const targets = [
+    { x: 120, y: 0, w: 50, h: 10 }, { x: 121, y: 0, w: 100, h: 10 },
+    { x: 0, y: 70, w: 25, h: 10 }, { x: 0, y: 71, w: 25, h: 20 },
+  ];
+  const guides = alignedGuides(me, targets, { scope: 20 });
+  assert.equal(guides.find((g) => g.orient === "h").to, 170);
+  assert.equal(guides.find((g) => g.orient === "v").to, 80);
+  assert.equal(alignedGuides(me, targets, { scope: 0 }).find((g) => g.orient === "h").to, 221);
+});
+
 test("vertical guides for left, right and abutting edges", () => {
   const me = { x: 200, y: 0, w: 100, h: 50 };
   const g = alignedGuides(me, [

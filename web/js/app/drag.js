@@ -246,7 +246,7 @@ export function createDragSnapper(env) {
   function solvePos(raw, scale, opts) {
     const s = session;
     const rect = { x: raw[0] + s.offset[0], y: raw[1] + s.offset[1], w: s.size[0], h: s.size[1], head: s.head };
-    const r = solveDrag({ rect, targets: s.targets, wireTops: s.wireTops, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, edges: opts.edges && !s.wireOnly, wires: opts.wires });
+    const r = solveDrag({ rect, targets: s.targets, wireTops: s.wireTops, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, edges: opts.edges && !s.wireOnly, wires: opts.wires, maxScopePx: opts.maxScopePx });
     keepSnap(s, r);
     return [r.x - s.offset[0], r.y - s.offset[1]];
   }
@@ -256,7 +256,7 @@ export function createDragSnapper(env) {
     const s = session;
     const rect = withMovingEdges(s.startRect, s.corner, edges);
     const min = s.renderer === "classic" && typeof s.item.computeSize === "function" ? s.item.computeSize() : [0, 0];
-    const res = solveResize({ rect, corner: s.corner, targets: s.targets, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, minW: min[0], minH: min[1] + s.titleH, edges: opts.edges });
+    const res = solveResize({ rect, corner: s.corner, targets: s.targets, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, minW: min[0], minH: min[1] + s.titleH, edges: opts.edges, maxScopePx: opts.maxScopePx });
     keepSnap(s, res);
     s.want = res.rect;
     return movingEdges(res.rect, s.corner);

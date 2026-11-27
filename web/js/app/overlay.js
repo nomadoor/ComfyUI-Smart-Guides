@@ -89,7 +89,7 @@ export function snapGuides(env, getSessions) {
       const corner = s.corner;
       const edges = s.mode === "drag" ? undefined : EDGES[corner];
       if (opts.edges && !s.wireOnly) {
-        const guides = alignedGuides(rect, s.targets, { edges });
+        const guides = alignedGuides(rect, s.targets, { edges, scope: opts.maxScopePx * px });
         // On each box, a solid line along its aligned edge; between boxes, a dashed line.
         // The line never runs dashed through a node, so a top guide at the body top reads as
         // "these edges line up" rather than a line crossing the nodes.
