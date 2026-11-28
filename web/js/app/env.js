@@ -8,6 +8,7 @@ export const SETTINGS = {
   wires: "SmartGuides.Snap.Wires",
   edges: "SmartGuides.Snap.Edges",
   distance: "SmartGuides.Snap.Distance",
+  maxScope: "SmartGuides.Snap.MaxScope",
   followTheme: "SmartGuides.Color.FollowTheme",
   color: "SmartGuides.Color.Custom",
 };
@@ -324,12 +325,14 @@ export function createEnv(app, status) {
     /** This extension's snap settings; inPx / outPx are the enter and exit distances. */
     snapOptions: () => {
       const inPx = Number(setting(SETTINGS.distance, 8)) || 8;
+      const scope = Number(setting(SETTINGS.maxScope, 0));
       return {
         enabled: !!setting(SETTINGS.enabled, true),
         wires: !!setting(SETTINGS.wires, true),
         edges: !!setting(SETTINGS.edges, true),
         inPx,
         outPx: exitDistance(inPx),
+        scope: Number.isFinite(scope) && scope > 0 ? scope : 0,
       };
     },
   };

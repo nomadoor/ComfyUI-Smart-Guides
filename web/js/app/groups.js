@@ -110,7 +110,7 @@ export function createGroupResizer(env) {
     let rect = resizedBy(startRect, corner, dx, dy);
     s.shift = shiftKey;
     if (opts.enabled && !s.shift) {
-      const res = solveResize({ rect, corner, targets: s.targets, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, minW, minH, edges: opts.edges });
+      const res = solveResize({ rect, corner, targets: s.targets, scale, inPx: opts.inPx, outPx: opts.outPx, current: s.current, minW, minH, edges: opts.edges, scope: opts.scope });
       s.snapX = res.snapX; s.snapY = res.snapY;
       s.current = { x: res.snapX?.key, y: res.snapY?.key };
       rect = res.rect;

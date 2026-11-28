@@ -11,6 +11,10 @@
   "SmartGuides_Snap_Distance": {
     "name": "吸い付く距離（画面の px）"
   },
+  "SmartGuides_Snap_MaxScope": {
+    "name": "最大整列範囲（キャンバス単位、0 は制限なし）",
+    "tooltip": "補助線に沿った隙間をズーム 100% 時の px で測ります。"
+  },
   "SmartGuides_Color_FollowTheme": {
     "name": "テーマの強調の色を使う"
   },
