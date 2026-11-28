@@ -1,10 +1,12 @@
-// Snapping math for drags and resizes. Pure: plain rectangles in canvas units,
-// distances compared in screen pixels (canvas distance * scale).
+// Snapping math for drags and resizes. Rectangles and alignment scope use canvas units.
+// Enter and exit distances use screen pixels (canvas distance * scale).
 //
 // A rect is { x, y, w, h, head }: the visual box (header included); head is the header height.
 // A target is { id, x, y, w, h, head }: another node or group that can be snapped to.
 // "Top" means the top of the body (y + head); abutting uses the whole box.
 // A wire top is { key, top }: the rect.y that makes one of the grabbed node's wires flat.
+
+import { inAlignmentScope } from "./guides.js";
 
 /** Exit distance for a given enter distance, keeping the playground's 8 : 14 ratio. */
 export function exitDistance(enterPx) {
@@ -37,6 +39,7 @@ function yCandidates(rect, targets, wireTops, opts) {
   }
   if (opts.edges) {
     for (const t of targets) {
+      if (!inAlignmentScope(rect, t, "x", opts.scope)) continue;
       out.push({ key: `top:${t.id}`, kind: "top", value: t.y + (t.head ?? 0) - (rect.head ?? 0), line: t.y + (t.head ?? 0), target: t });
       out.push({ key: `bottom:${t.id}`, kind: "bottom", value: t.y + t.h - rect.h, line: t.y + t.h, target: t });
       out.push({ key: `below:${t.id}`, kind: "below", value: t.y + t.h, line: t.y + t.h, target: t });
@@ -50,6 +53,7 @@ function xCandidates(rect, targets, opts) {
   const out = [];
   if (!opts.edges) return out;
   for (const t of targets) {
+    if (!inAlignmentScope(rect, t, "y", opts.scope)) continue;
     out.push({ key: `left:${t.id}`, kind: "left", value: t.x, line: t.x, target: t });
     out.push({ key: `right:${t.id}`, kind: "right", value: t.x + t.w - rect.w, line: t.x + t.w, target: t });
     out.push({ key: `rightOf:${t.id}`, kind: "rightOf", value: t.x + t.w, line: t.x + t.w, target: t });
@@ -87,14 +91,24 @@ export function pickCandidate(cands, raw, currentKey, scale, inPx, outPx) {
   return wire ?? nearest(cands);
 }
 
+function keepSnapsInScope(rect, snapX, snapY, scope) {
+  // Both passed against the raw box. If both conflict, keep the height snap.
+  if (!inAlignmentScope(rect, snapX.target, "y", scope)) return { snapX: null, snapY };
+  if (snapY.target && !inAlignmentScope(rect, snapY.target, "x", scope)) return { snapX, snapY: null };
+  return { snapX, snapY };
+}
+
 /**
  * Snaps a dragged rect.
  * @returns {{ x: number, y: number, snapX: object|null, snapY: object|null }}
  */
-export function solveDrag({ rect, targets, wireTops, scale, inPx, outPx, current = {}, edges = true, wires = true }) {
-  const opts = { edges, wires };
-  const snapY = pickCandidate(yCandidates(rect, targets, wireTops, opts), rect.y, current.y, scale, inPx, outPx);
-  const snapX = pickCandidate(xCandidates(rect, targets, opts), rect.x, current.x, scale, inPx, outPx);
+export function solveDrag({ rect, targets, wireTops, scale, inPx, outPx, current = {}, edges = true, wires = true, scope = 0 }) {
+  const opts = { edges, wires, scope };
+  let snapY = pickCandidate(yCandidates(rect, targets, wireTops, opts), rect.y, current.y, scale, inPx, outPx);
+  let snapX = pickCandidate(xCandidates(rect, targets, opts), rect.x, current.x, scale, inPx, outPx);
+  if (scope && snapX && snapY) {
+    ({ snapX, snapY } = keepSnapsInScope({ ...rect, x: snapX.value, y: snapY.value }, snapX, snapY, scope));
+  }
   return { x: snapX ? snapX.value : rect.x, y: snapY ? snapY.value : rect.y, snapX, snapY };
 }
 
@@ -105,7 +119,7 @@ export function solveDrag({ rect, targets, wireTops, scale, inPx, outPx, current
  * minimum size is skipped.
  * @returns {{ rect: object, snapX: object|null, snapY: object|null }}
  */
-export function solveResize({ rect, corner, targets, scale, inPx, outPx, current = {}, minW = 0, minH = 0, edges = true }) {
+export function solveResize({ rect, corner, targets, scale, inPx, outPx, current = {}, minW = 0, minH = 0, edges = true, scope = 0 }) {
   const west = corner.includes("W");
   const north = corner.includes("N");
   const right = rect.x + rect.w;
@@ -118,18 +132,21 @@ export function solveResize({ rect, corner, targets, scale, inPx, outPx, current
   const ys = [];
   if (edges) {
     for (const t of targets) {
-      for (const [kind, line] of [["left", t.x], ["right", t.x + t.w]]) {
-        const w = west ? right - line : line - rect.x;
-        if (w >= minW) xs.push({ key: `${kind}:${t.id}`, kind, value: line, line, target: t });
+      if (inAlignmentScope(rect, t, "y", scope)) {
+        for (const [kind, line] of [["left", t.x], ["right", t.x + t.w]]) {
+          const w = west ? right - line : line - rect.x;
+          if (w >= minW) xs.push({ key: `${kind}:${t.id}`, kind, value: line, line, target: t });
+        }
       }
+      if (!inAlignmentScope(rect, t, "x", scope)) continue;
       const kind = north ? "top" : "bottom";
       const line = north ? t.y + (t.head ?? 0) : t.y + t.h;
       const h = north ? bottom - (line - head) : line - rect.y;
       if (h >= minH) ys.push({ key: `${kind}:${t.id}`, kind, value: line, line, target: t });
     }
   }
-  const snapX = pickCandidate(xs, movingX, current.x, scale, inPx, outPx);
-  const snapY = pickCandidate(ys, movingY, current.y, scale, inPx, outPx);
+  let snapX = pickCandidate(xs, movingX, current.x, scale, inPx, outPx);
+  let snapY = pickCandidate(ys, movingY, current.y, scale, inPx, outPx);
 
   let { x, y, w, h } = rect;
   if (snapX) {
@@ -137,6 +154,11 @@ export function solveResize({ rect, corner, targets, scale, inPx, outPx, current
   }
   if (snapY) {
     if (north) { y = snapY.value - head; h = bottom - y; } else { h = snapY.value - y; }
+  }
+  if (scope && snapX && snapY) {
+    ({ snapX, snapY } = keepSnapsInScope({ x, y, w, h }, snapX, snapY, scope));
+    if (!snapX) ({ x, w } = rect);
+    if (!snapY) ({ y, h } = rect);
   }
   return { rect: { x, y, w, h }, snapX, snapY };
 }
