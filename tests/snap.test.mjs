@@ -27,24 +27,25 @@ test("distance is measured in screen pixels", () => {
   assert.equal(r2.y, 100);
 });
 
-test("drag scope limits the gap along each guide in screen pixels", () => {
+test("drag scope limits the canvas gap along each guide at every zoom level", () => {
   const input = {
     ...base, rect: { x: 3, y: 103, w: 100, h: 50 }, wireTops: [], targets: [
-      { id: 1, x: 0, y: 173, w: 80, h: 40 }, // vertical guide across a 20-unit gap
-      { id: 2, x: 124, y: 100, w: 80, h: 40 }, // horizontal guide across a 21-unit gap
+      { id: 1, x: 0, y: 253, w: 80, h: 40 }, // vertical guide across a 100-unit gap
+      { id: 2, x: 204, y: 100, w: 80, h: 40 }, // horizontal guide across a 101-unit gap
     ],
   };
-  const limited = solveDrag({ ...input, scale: 2, maxScopePx: 40 });
-  assert.equal(limited.snapX.key, "left:1");
-  assert.equal(limited.snapY, null);
-  assert.equal(solveDrag({ ...input, scale: 2, maxScopePx: 0 }).snapY.key, "top:2");
-  assert.equal(solveDrag({ ...input, scale: 1, maxScopePx: 40 }).snapY.key, "top:2");
+  for (const scale of [0.25, 1, 2]) {
+    const limited = solveDrag({ ...input, scale, scope: 100 });
+    assert.equal(limited.snapX?.key, "left:1", `zoom ${scale}`);
+    assert.equal(limited.snapY, null, `zoom ${scale}`);
+    assert.equal(solveDrag({ ...input, scale, scope: 0 }).snapY.key, "top:2");
+  }
 });
 
 test("drag releases an edge snap outside the scope and still snaps to wires", () => {
   const input = {
     ...base, rect: { x: 3, y: 103, w: 100, h: 50 }, current: { y: "top:1" },
-    targets: [{ id: 1, x: 300, y: 100, w: 80, h: 40 }], wireTops: [], maxScopePx: 40,
+    targets: [{ id: 1, x: 300, y: 100, w: 80, h: 40 }], wireTops: [], scope: 40,
   };
   assert.equal(solveDrag(input).snapY, null);
   assert.equal(solveDrag({ ...input, wireTops: [{ key: "wire:1", top: 107 }] }).snapY.kind, "wire");
@@ -57,7 +58,7 @@ test("drag drops an edge snap if snapping on the other axis puts it out of scope
       { id: 2, x: 110, y: 95, w: 80, h: 40 },
     ],
   };
-  const limited = solveDrag({ ...input, maxScopePx: 20 });
+  const limited = solveDrag({ ...input, scope: 20 });
   assert.equal(limited.snapX, null);
   assert.equal(limited.snapY.key, "top:2");
   assert.equal(solveDrag(input).snapX.key, "left:1");
@@ -132,17 +133,19 @@ test("resize from NW moves the left and top edges, keeping right and bottom", ()
   assert.equal(r.snapY.kind, "top");
 });
 
-test("resize scope accepts overlapping spans and rejects distant aligned edges", () => {
+test("resize scope accepts overlapping spans and rejects distant edges at every zoom level", () => {
   const input = {
     ...base, corner: "SE", rect: { x: 0, y: 0, w: 100, h: 50 }, targets: [
-      { id: 1, x: 103, y: 30, w: 80, h: 40 },
-      { id: 2, x: 300, y: 0, w: 80, h: 53 },
+      { id: 1, x: 103, y: 20, w: 80, h: 100 },
+      { id: 2, x: 204, y: 0, w: 80, h: 53 },
     ],
   };
-  const limited = solveResize({ ...input, maxScopePx: 1 });
-  assert.equal(limited.snapX.key, "left:1");
-  assert.equal(limited.snapY, null);
-  assert.equal(solveResize({ ...input, maxScopePx: 0 }).snapY.key, "bottom:2");
+  for (const scale of [0.25, 1, 2]) {
+    const limited = solveResize({ ...input, scale, scope: 100 });
+    assert.equal(limited.snapX?.key, "left:1", `zoom ${scale}`);
+    assert.equal(limited.snapY, null, `zoom ${scale}`);
+    assert.equal(solveResize({ ...input, scale, scope: 0 }).snapY.key, "bottom:2");
+  }
 });
 
 test("resize drops a bottom snap when shrinking the width puts it out of scope", () => {
@@ -152,7 +155,7 @@ test("resize drops a bottom snap when shrinking the width puts it out of scope",
       { id: 2, x: 120, y: 65, w: 80, h: 40 },
     ],
   };
-  const limited = solveResize({ ...input, maxScopePx: 20 });
+  const limited = solveResize({ ...input, scope: 20 });
   assert.deepEqual(limited.rect, { x: 0, y: 0, w: 95, h: 100 });
   assert.equal(limited.snapX.key, "left:1");
   assert.equal(limited.snapY, null);

@@ -1,5 +1,5 @@
-// Snapping math for drags and resizes. Pure: plain rectangles in canvas units,
-// distances compared in screen pixels (canvas distance * scale).
+// Snapping math for drags and resizes. Rectangles and alignment scope use canvas units.
+// Enter and exit distances use screen pixels (canvas distance * scale).
 //
 // A rect is { x, y, w, h, head }: the visual box (header included); head is the header height.
 // A target is { id, x, y, w, h, head }: another node or group that can be snapped to.
@@ -102,8 +102,7 @@ function keepSnapsInScope(rect, snapX, snapY, scope) {
  * Snaps a dragged rect.
  * @returns {{ x: number, y: number, snapX: object|null, snapY: object|null }}
  */
-export function solveDrag({ rect, targets, wireTops, scale, inPx, outPx, current = {}, edges = true, wires = true, maxScopePx = 0 }) {
-  const scope = maxScopePx / scale;
+export function solveDrag({ rect, targets, wireTops, scale, inPx, outPx, current = {}, edges = true, wires = true, scope = 0 }) {
   const opts = { edges, wires, scope };
   let snapY = pickCandidate(yCandidates(rect, targets, wireTops, opts), rect.y, current.y, scale, inPx, outPx);
   let snapX = pickCandidate(xCandidates(rect, targets, opts), rect.x, current.x, scale, inPx, outPx);
@@ -120,7 +119,7 @@ export function solveDrag({ rect, targets, wireTops, scale, inPx, outPx, current
  * minimum size is skipped.
  * @returns {{ rect: object, snapX: object|null, snapY: object|null }}
  */
-export function solveResize({ rect, corner, targets, scale, inPx, outPx, current = {}, minW = 0, minH = 0, edges = true, maxScopePx = 0 }) {
+export function solveResize({ rect, corner, targets, scale, inPx, outPx, current = {}, minW = 0, minH = 0, edges = true, scope = 0 }) {
   const west = corner.includes("W");
   const north = corner.includes("N");
   const right = rect.x + rect.w;
@@ -131,7 +130,6 @@ export function solveResize({ rect, corner, targets, scale, inPx, outPx, current
 
   const xs = [];
   const ys = [];
-  const scope = maxScopePx / scale;
   if (edges) {
     for (const t of targets) {
       if (inAlignmentScope(rect, t, "y", scope)) {
