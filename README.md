@@ -50,6 +50,7 @@ The following can be set in ComfyUI's ⚙ `Settings` → `Smart Guides` tab:
 - Snap to make wires horizontal
 - Snap to other nodes' and groups' edges
 - Snap distance (screen pixels)
+- How far away other nodes and groups can be for their edges to snap (canvas units, 0 = no limit)
 - Guide color (the theme's accent color, or a color you choose)
 
 ## License
